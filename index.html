@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Faceted Crystal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&display=swap">
+<style>
+:root{ --bg:#232216; --surface:#343122; --ink:#e7e6e2; --muted:#a9a696; --hairline:#4c4830; --accent:#6878da; --warn:#f5be3d; --error:#ec5651; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Manrope',system-ui,sans-serif; font-weight:300;
+  min-height:100%; display:flex; flex-direction:column; align-items:center;
+  padding:38px 20px 60px; position:relative; overflow-x:hidden;
+}
+#mesh{position:fixed;inset:0;z-index:0;pointer-events:none;filter:blur(62px);opacity:.5}
+#mesh b{position:absolute;display:block;border-radius:50%}
+#mesh b:nth-child(1){width:46vw;height:46vw;background:var(--accent);left:-8vw;top:-10vw;animation:d1 22s ease-in-out infinite alternate}
+#mesh b:nth-child(2){width:38vw;height:38vw;background:var(--warn);right:-6vw;top:22vh;animation:d2 27s ease-in-out infinite alternate}
+#mesh b:nth-child(3){width:30vw;height:30vw;background:var(--error);left:28vw;bottom:-14vw;animation:d3 31s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate3d(9vw,12vh,0) scale(1.22)}}
+@keyframes d2{to{transform:translate3d(-12vw,-9vh,0) scale(.82)}}
+@keyframes d3{to{transform:translate3d(7vw,-11vh,0) scale(1.16)}}
+
+.col{width:min(680px,100%); position:relative; z-index:1; display:flex; flex-direction:column; gap:26px}
+
+header{display:flex;flex-direction:column;gap:10px}
+.eyebrow{
+  font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:9px;font-weight:500;
+}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:46px;line-height:1.02;letter-spacing:-.03em}
+h1 span{color:var(--accent)}
+.lede{color:var(--muted);font-size:15px;line-height:1.62;max-width:56ch;font-weight:300}
+
+.stage{
+  position:relative;width:100%;aspect-ratio:1/1;border-radius:22px;overflow:hidden;
+  border:1px solid var(--hairline);background:var(--surface);
+  box-shadow:0 10px 30px rgba(0,0,0,.14);
+}
+.stage canvas{display:block;width:100%;height:100%}
+.badge{
+  position:absolute;left:16px;top:16px;z-index:2;display:flex;gap:7px;align-items:center;
+  padding:7px 13px;border-radius:22px;border:1px solid var(--hairline);
+  background:var(--surface);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+.hint{
+  position:absolute;right:16px;bottom:14px;z-index:2;font-size:11px;color:var(--muted);
+  letter-spacing:.14em;text-transform:uppercase;font-weight:500;opacity:.8;
+}
+
+.bar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px;
+  border:1px solid var(--hairline);border-radius:22px;background:var(--surface);
+  box-shadow:0 10px 30px rgba(0,0,0,.14);
+}
+button{
+  font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.01em;cursor:pointer;
+  color:var(--ink);background:transparent;border:1px solid var(--hairline);
+  border-radius:22px;padding:10px 17px;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .22s cubic-bezier(.34,1.8,.5,1),background .2s,border-color .2s,color .2s;
+}
+button:hover{border-color:var(--accent);transform:scale(1.06)}
+button:active{transform:scale(.93)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+button.on{border-color:var(--accent);color:var(--accent)}
+button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.slider{display:flex;align-items:center;gap:11px;flex:1;min-width:210px;padding:0 6px}
+.slider label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap}
+.slider output{font-size:12px;font-weight:700;color:var(--accent);min-width:26px;text-align:right}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;flex:1;height:3px;border-radius:22px;
+  background:var(--hairline);outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:3px solid var(--surface);
+  transition:transform .2s cubic-bezier(.34,1.8,.5,1);
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.32)}
+input[type=range]::-moz-range-thumb{
+  width:15px;height:15px;border-radius:50%;background:var(--accent);
+  cursor:pointer;border:3px solid var(--surface);
+}
+
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fact{
+  border:1px solid var(--hairline);border-radius:22px;background:var(--surface);
+  padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.14);
+  transition:transform .26s cubic-bezier(.34,1.8,.5,1),border-color .2s;
+}
+.fact:hover{transform:translateY(-4px) scale(1.02);border-color:var(--accent)}
+.fact dt{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.fact dd{font-size:23px;font-weight:800;margin-top:7px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+footer{color:var(--muted);font-size:12px;line-height:1.7;letter-spacing:.02em}
+@media(max-width:560px){h1{font-size:34px}.facts{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="mesh"><b></b><b></b><b></b></div>
+
+<div class="col">
+  <header>
+    <div class="eyebrow">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2 5 9l7 13 7-13-7-7Z"/><path d="M5 9h14M12 2v20"/></svg>
+      Procedural geometry · no Blender
+    </div>
+    <h1 id="title">A crystal built from <span>nothing but math</span>.</h1>
+    <p class="lede" id="lede">Every facet below is generated at runtime: jittered vertex rings, hard flat normals, a refracting glass shell over a glowing inner core. Drag to orbit, scroll to zoom, regenerate for a brand new stone.</p>
+  </header>
+
+  <div class="stage">
+    <div class="badge"><span class="dot"></span><span id="badge">building</span></div>
+    <canvas id="c"></canvas>
+    <div class="hint">drag · scroll</div>
+  </div>
+
+  <div class="bar">
+    <button id="mCrystal" class="on">
+      <svg viewBox="0 0 24 24"><path d="M12 2 5 9l7 13 7-13-7-7Z"/><path d="M5 9h14M12 2v20"/></svg>
+      Crystal
+    </button>
+    <button id="mTree">
+      <svg viewBox="0 0 24 24"><path d="M12 3 7 10h3l-4 6h5v5h2v-5h5l-4-6h3l-5-7Z"/></svg>
+      Tree
+    </button>
+    <button class="primary" id="rand">
+      <svg viewBox="0 0 24 24"><path d="M3 5h4l10 14h4"/><path d="M3 19h4l3-4M17 5h4l-3 4"/><path d="M18 2l3 3-3 3M18 16l3 3-3 3"/></svg>
+      Randomize
+    </button>
+    <button id="regen">
+      <svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>
+      New seed
+    </button>
+    <button id="spin" class="on">
+      <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+      Spin
+    </button>
+    <button id="wire">
+      <svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
+      Edges
+    </button>
+    <button id="grass" class="on">
+      <svg viewBox="0 0 24 24"><path d="M4 21c0-6 2-9 4-11M12 21c0-8 1-12 0-17M20 21c0-6-2-9-4-11"/><path d="M8 21c0-4 1-6 2-8M16 21c0-4-1-6-2-8"/></svg>
+      Grass
+    </button>
+    <div class="slider">
+      <label for="sides">Facets</label>
+      <input type="range" id="sides" min="5" max="14" step="1" value="8">
+      <output id="sidesOut">8</output>
+    </div>
+    <div class="slider">
+      <label for="hue">Hue</label>
+      <input type="range" id="hue" min="0" max="360" step="1" value="255">
+      <output id="hueOut">255</output>
+    </div>
+  </div>
+
+  <dl class="facts">
+    <div class="fact"><dt>Triangles</dt><dd id="tris">—</dd></div>
+    <div class="fact"><dt id="partLabel">Shards</dt><dd id="shards">—</dd></div>
+    <div class="fact"><dt>Seed</dt><dd id="seed">—</dd></div>
+  </dl>
+
+  <footer>Glass shell uses physically based transmission with per-shard iridescence and a procedural studio environment. The inner core is a second, shrunken copy of the same hull, flat shaded and emissive, so the refraction has something real to bend.</footer>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const CSS = getComputedStyle(document.documentElement);
+const Pal = n => CSS.getPropertyValue(n).trim();
+const C = {
+  bg: new THREE.Color(Pal('--bg')),
+  surface: new THREE.Color(Pal('--surface')),
+  ink: new THREE.Color(Pal('--ink')),
+  accent: new THREE.Color(Pal('--accent')),
+  warn: new THREE.Color(Pal('--warn')),
+  error: new THREE.Color(Pal('--error'))
+};
+
+/** Mulberry32 — deterministic per-seed randomness. */
+function Rng(seed){
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * BuildShard returns a hard-faceted crystal hull: stacked vertex rings with
+ * per-ring radius, twist and per-vertex jitter, a bevelled shoulder, a pinched
+ * neck and a pointed apex. Flat normals so every quad reads as its own facet.
+ */
+function BuildShard(rand, sides, height, radius){
+  const twistBase = rand() * Math.PI * 2;
+  const profile = [
+    { t: 0.00, r: 0.74, twist: 0.00 },
+    { t: 0.06, r: 0.97, twist: 0.05 },
+    { t: 0.24, r: 1.00, twist: 0.10 },
+    { t: 0.44, r: 0.92, twist: 0.20 },
+    { t: 0.58, r: 0.98, twist: 0.26 },
+    { t: 0.72, r: 0.80, twist: 0.36 },
+    { t: 0.84, r: 0.55, twist: 0.44 },
+    { t: 0.93, r: 0.30, twist: 0.52 }
+  ];
+
+  const squashX = 1 + (rand() - 0.5) * 0.34;
+  const squashY = 1 + (rand() - 0.5) * 0.34;
+  const lean = (rand() - 0.5) * 0.30;
+
+  const rings = profile.map(p => {
+    const jitter = [];
+    for (let i = 0; i < sides; i++) jitter.push(1 + (rand() - 0.5) * 0.20);
+    return { ...p, jitter };
+  });
+
+  const verts = [];
+  const ringIdx = [];
+  for (const ring of rings) {
+    const row = [];
+    const z = ring.t * height;
+    for (let i = 0; i < sides; i++) {
+      const a = twistBase + ring.twist + (i / sides) * Math.PI * 2;
+      const r = radius * ring.r * ring.jitter[i];
+      row.push(verts.length / 3);
+      verts.push(
+        Math.cos(a) * r * squashX + lean * z,
+        Math.sin(a) * r * squashY,
+        z
+      );
+    }
+    ringIdx.push(row);
+  }
+
+  const apex = verts.length / 3;
+  verts.push(lean * height + (rand() - 0.5) * radius * 0.12,
+             (rand() - 0.5) * radius * 0.12,
+             height);
+  const base = verts.length / 3;
+  verts.push(0, 0, 0);
+
+  const idx = [];
+  for (let r = 0; r < ringIdx.length - 1; r++) {
+    const lo = ringIdx[r], hi = ringIdx[r + 1];
+    for (let i = 0; i < sides; i++) {
+      const j = (i + 1) % sides;
+      idx.push(lo[i], lo[j], hi[j]);
+      idx.push(lo[i], hi[j], hi[i]);
+    }
+  }
+  const top = ringIdx[ringIdx.length - 1];
+  for (let i = 0; i < sides; i++) idx.push(top[i], top[(i + 1) % sides], apex);
+  const bot = ringIdx[0];
+  for (let i = 0; i < sides; i++) idx.push(bot[(i + 1) % sides], bot[i], base);
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  g.setIndex(idx);
+  const flat = g.toNonIndexed();
+  flat.computeVertexNormals();
+  g.dispose();
+  flat.rotateX(-Math.PI / 2);
+  return flat;
+}
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.72;
+
+const scene = new THREE.Scene();
+scene.background = C.surface.clone().multiplyScalar(0.42);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envRT = pmrem.fromScene(new RoomEnvironment(renderer), 0.04);
+scene.environment = envRT.texture;
+
+const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+camera.position.set(3.9, 2.6, 5.9);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.minDistance = 2.4;
+controls.maxDistance = 12;
+controls.target.set(0, 1.05, 0);
+
+const key = new THREE.DirectionalLight(C.ink, 1.5);
+key.position.set(4, 6, 3);
+scene.add(key);
+const rim = new THREE.DirectionalLight(C.accent, 2.0);
+rim.position.set(-5, 2.2, -4);
+scene.add(rim);
+const warm = new THREE.PointLight(C.warn, 9, 14);
+warm.position.set(2.2, 0.7, -2.4);
+scene.add(warm);
+scene.add(new THREE.AmbientLight(C.accent, 0.2));
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.34, 0.55, 0.85);
+composer.addPass(bloom);
+
+const root = new THREE.Group();
+scene.add(root);
+
+const state = { mode:'crystal', spin:true, edges:false, grass:true, sides:8, hue:255, seed:0, tris:0, shards:0 };
+let tally = { tris:0, parts:0 };
+let grassMat = null;
+
+/**
+ * BladeGeometry builds one tapered grass blade as a triangle strip of
+ * `seg` quads, unit height, centred on x with the base at y = 0.
+ */
+function BladeGeometry(seg, halfWidth){
+  const pos = [], nrm = [], uvs = [], idx = [];
+  for (let i = 0; i <= seg; i++) {
+    const t = i / seg;
+    const w = halfWidth * Math.pow(1 - t, 0.72);
+    pos.push(-w, t, 0, w, t, 0);
+    nrm.push(0, 0, 1, 0, 0, 1);
+    uvs.push(0, t, 1, t);
+  }
+  for (let i = 0; i < seg; i++) {
+    const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
+    idx.push(a, c, b, b, c, d);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  g.setIndex(idx);
+  return g;
+}
+
+const GRASS_VERT = `
+precision highp float;
+attribute vec3 aOffset;
+attribute vec3 aParam;   // x: yaw, y: height scale, z: width scale
+attribute vec2 aWind;    // x: phase, y: bend
+attribute float aShade;
+uniform float uTime;
+uniform float uWind;
+varying float vH;
+varying float vShade;
+varying vec3 vNormal;
+varying vec3 vView;
+
+mat2 Rot(float a){ float s = sin(a), c = cos(a); return mat2(c, -s, s, c); }
+
+void main(){
+  float h = position.y;
+  vH = h;
+  vShade = aShade;
+
+  vec3 p = position;
+  p.x *= aParam.z;
+  p.y *= aParam.y;
+
+  float curl = aWind.y * h * h * aParam.y;
+  float gust = sin(uTime * 1.7 + aWind.x + h * 1.4)
+             + 0.45 * sin(uTime * 3.1 + aWind.x * 1.7);
+  float sway = gust * uWind * h * h * aParam.y;
+
+  p.z += curl + sway;
+  p.x += sway * 0.35;
+
+  vec3 n = normal;
+  p.xz = Rot(aParam.x) * p.xz;
+  n.xz = Rot(aParam.x) * n.xz;
+  n = normalize(n + vec3(0.0, 0.55, 0.0));
+
+  vec4 world = modelMatrix * vec4(p + aOffset, 1.0);
+  vNormal = normalize(mat3(modelMatrix) * n);
+  vView = normalize(cameraPosition - world.xyz);
+  gl_Position = projectionMatrix * viewMatrix * world;
+}
+`;
+
+const GRASS_FRAG = `
+precision highp float;
+uniform vec3 uDark;
+uniform vec3 uLight;
+uniform vec3 uTip;
+uniform vec3 uRim;
+uniform vec3 uSun;
+varying float vH;
+varying float vShade;
+varying vec3 vNormal;
+varying vec3 vView;
+
+void main(){
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
+  float d = dot(n, normalize(uSun)) * 0.5 + 0.5;
+
+  float band = step(0.42, d) * 0.5 + step(0.68, d) * 0.5;
+  band = mix(band, d, 0.18);
+
+  vec3 col = mix(uDark, uLight, band);
+  col = mix(col, uTip, smoothstep(0.62, 1.0, vH) * 0.85);
+  col *= mix(0.34, 1.0, smoothstep(0.0, 0.45, vH));
+  col *= mix(0.86, 1.14, vShade);
+
+  float rim = pow(1.0 - max(dot(n, normalize(vView)), 0.0), 2.4);
+  col += uRim * rim * 0.42 * smoothstep(0.15, 1.0, vH);
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+/**
+ * AddGrass scatters instanced toon-shaded blades across the plinth, clearing
+ * a radius around the centre piece so nothing grows through the model.
+ */
+function AddGrass(rand){
+  if (!state.grass) return;
+  const hue = state.hue / 360;
+  const count = 7000;
+  const blade = BladeGeometry(4, 0.030);
+
+  const geo = new THREE.InstancedBufferGeometry();
+  geo.index = blade.index;
+  geo.attributes.position = blade.attributes.position;
+  geo.attributes.normal = blade.attributes.normal;
+  geo.attributes.uv = blade.attributes.uv;
+  geo.instanceCount = count;
+
+  const off = new Float32Array(count * 3);
+  const par = new Float32Array(count * 3);
+  const wnd = new Float32Array(count * 2);
+  const shd = new Float32Array(count);
+
+  const inner = state.mode === 'tree' ? 0.34 : 0.78;
+  for (let i = 0; i < count; i++) {
+    const a = rand() * Math.PI * 2;
+    const r = inner + Math.sqrt(rand()) * (2.02 - inner);
+    off[i*3]   = Math.cos(a) * r;
+    off[i*3+1] = -0.045;
+    off[i*3+2] = Math.sin(a) * r;
+
+    const edge = 1 - Math.min(1, Math.max(0, (r - 1.6) / 0.42)) * 0.45;
+    par[i*3]   = rand() * Math.PI * 2;
+    par[i*3+1] = (0.20 + rand() * 0.26) * edge;
+    par[i*3+2] = 0.7 + rand() * 0.7;
+
+    wnd[i*2]   = rand() * Math.PI * 2;
+    wnd[i*2+1] = (rand() - 0.5) * 0.9;
+    shd[i]     = rand();
+  }
+
+  geo.setAttribute('aOffset', new THREE.InstancedBufferAttribute(off, 3));
+  geo.setAttribute('aParam', new THREE.InstancedBufferAttribute(par, 3));
+  geo.setAttribute('aWind', new THREE.InstancedBufferAttribute(wnd, 2));
+  geo.setAttribute('aShade', new THREE.InstancedBufferAttribute(shd, 1));
+
+  const gh = 0.27;
+  grassMat = new THREE.ShaderMaterial({
+    vertexShader: GRASS_VERT,
+    fragmentShader: GRASS_FRAG,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uTime:  { value: 0 },
+      uWind:  { value: 0.16 },
+      uSun:   { value: new THREE.Vector3(4, 6, 3).normalize() },
+      uDark:  { value: new THREE.Color().setHSL(gh, 0.78, 0.07) },
+      uLight: { value: new THREE.Color().setHSL(gh, 0.72, 0.24) },
+      uTip:   { value: new THREE.Color().setHSL((gh + 0.03) % 1, 0.82, 0.38) },
+      uRim:   { value: new THREE.Color().setHSL((state.hue / 360 + 0.5) % 1, 0.75, 0.62) }
+    }
+  });
+
+  const lawn = new THREE.Mesh(geo, grassMat);
+  lawn.name = 'grass';
+  lawn.frustumCulled = false;
+  root.add(lawn);
+  tally.tris += count * 8;
+  blade.dispose();
+}
+
+/** Random integer in [lo, hi]. */
+function RandInt(rand, lo, hi){ return lo + Math.floor(rand() * (hi - lo + 1)); }
+
+function Dispose(obj){
+  obj.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose());
+  });
+}
+
+function Build(){
+  while (root.children.length) { const c = root.children.pop(); Dispose(c); root.remove(c); }
+  const seed = state.seed || (Date.now() & 0xffffff);
+  state.seed = seed;
+  const rand = Rng(seed);
+  tally = { tris:0, parts:0 };
+
+  if (state.mode === 'tree') {
+    BuildTree(rand);
+    camera.position.set(4.6, 3.0, 6.6);
+    controls.target.set(0, 1.5, 0);
+  } else {
+    BuildCrystal(rand);
+    camera.position.set(3.9, 2.6, 5.9);
+    controls.target.set(0, 1.05, 0);
+  }
+  controls.update();
+
+  AddPlinth(rand);
+  AddGrass(rand);
+  AddDust(rand);
+
+  state.tris = Math.round(tally.tris);
+  state.shards = tally.parts;
+  document.getElementById('tris').textContent = state.tris.toLocaleString();
+  document.getElementById('shards').textContent = tally.parts;
+  document.getElementById('seed').textContent = seed.toString(16).toUpperCase().slice(0, 5);
+  document.getElementById('badge').textContent = 'live';
+  document.getElementById('partLabel').textContent = state.mode === 'tree' ? 'Branches' : 'Shards';
+  window.CRYSTAL = state;
+}
+
+function AddPlinth(rand){
+  const hue = state.hue / 360;
+  const plinth = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.1, 2.25, 0.16, 64),
+    new THREE.MeshStandardMaterial({ color: C.bg, roughness: 0.34, metalness: 0.55, envMapIntensity: 0.9 })
+  );
+  plinth.name = 'plinth';
+  plinth.position.y = -0.12;
+  root.add(plinth);
+}
+
+function AddDust(rand){
+  const edgeTint = new THREE.Color().setHSL((state.hue / 360 + 0.5) % 1, 0.74, 0.70);
+  const n = 260, pp = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const a = rand() * Math.PI * 2;
+    const d = 0.5 + rand() * 2.3;
+    pp[i*3]   = Math.cos(a) * d;
+    pp[i*3+1] = rand() * 3.0 - 0.1;
+    pp[i*3+2] = Math.sin(a) * d;
+  }
+  const dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
+  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+    color: edgeTint, size: 0.021, transparent: true, opacity: 0.8,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  dust.name = 'dust';
+  root.add(dust);
+}
+
+const LEAF_V0 = 0.15;
+const LeafWidth = v => Math.sin(Math.pow(Math.max(v, 0), 0.62) * Math.PI) * 0.40;
+const LeafSerrate = (v, k) => 1 + 0.045 * Math.sin(v * 38 + k);
+
+/** MakeLeafTexture paints a veined blade with gradient, serration and speckle. */
+function MakeLeafTexture(hex){
+  const s = 256, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const x = c.getContext('2d');
+  const base = new THREE.Color(hex);
+  const dark = base.clone().multiplyScalar(0.5);
+  const lite = base.clone().lerp(new THREE.Color('#ffffff'), 0.36);
+  const X = u => (0.5 + u) * s, Y = v => (1 - v) * s;
+
+  const blade = new Path2D(), steps = 72;
+  for (let i = 0; i <= steps; i++){
+    const t = i / steps, v = LEAF_V0 + (1 - LEAF_V0) * t;
+    const w = LeafWidth(t) * LeafSerrate(t, 0);
+    i ? blade.lineTo(X(w), Y(v)) : blade.moveTo(X(w), Y(v));
+  }
+  for (let i = steps; i >= 0; i--){
+    const t = i / steps, v = LEAF_V0 + (1 - LEAF_V0) * t;
+    blade.lineTo(X(-LeafWidth(t) * LeafSerrate(t, 1.7)), Y(v));
+  }
+  blade.closePath();
+
+  const g = x.createLinearGradient(0, s, 0, 0);
+  g.addColorStop(0, dark.getStyle());
+  g.addColorStop(0.42, base.getStyle());
+  g.addColorStop(1, lite.getStyle());
+  x.fillStyle = g;
+  x.fill(blade);
+
+  x.save();
+  x.clip(blade);
+  x.strokeStyle = lite.clone().multiplyScalar(0.95).getStyle();
+  x.lineWidth = 3.2;
+  x.beginPath();
+  x.moveTo(X(0), Y(LEAF_V0 * 0.4));
+  x.lineTo(X(0), Y(1));
+  x.stroke();
+
+  x.lineWidth = 1.6;
+  x.globalAlpha = 0.55;
+  for (let i = 1; i <= 9; i++){
+    const t = i / 10, v = LEAF_V0 + (1 - LEAF_V0) * t;
+    const w = LeafWidth(t) * 0.92, tip = LEAF_V0 + (1 - LEAF_V0) * Math.min(1, t + 0.16);
+    for (const sgn of [1, -1]){
+      x.beginPath();
+      x.moveTo(X(0), Y(v));
+      x.quadraticCurveTo(X(sgn * w * 0.5), Y(v + 0.02), X(sgn * w), Y(tip));
+      x.stroke();
+    }
+  }
+  x.globalAlpha = 0.16;
+  x.fillStyle = dark.getStyle();
+  for (let i = 0; i < 260; i++){
+    const u = (Math.random() - 0.5) * 0.9, v = Math.random();
+    x.beginPath();
+    x.arc(X(u), Y(v), Math.random() * 2.2, 0, 6.3);
+    x.fill();
+  }
+  x.restore();
+
+  x.globalAlpha = 0.5;
+  x.strokeStyle = dark.getStyle();
+  x.lineWidth = 3;
+  x.stroke(blade);
+  x.globalAlpha = 1;
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/** MakeLeafGeometry builds a real 3D blade: cupped along the midrib, drooping to the tip. */
+function MakeLeafGeometry(){
+  const cols = 7, rows = 15;
+  const g = new THREE.PlaneGeometry(1, 1, cols, rows);
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++){
+    const u = uv.getX(i), v = uv.getY(i);
+    const t = Math.max(0, (v - LEAF_V0) / (1 - LEAF_V0));
+    const halfW = v < LEAF_V0 ? 0.022 : LeafWidth(t) * LeafSerrate(t, u < 0.5 ? 1.7 : 0);
+    const sx = (u - 0.5) * 2;
+    const cup = Math.pow(Math.abs(sx), 1.7) * 0.16 * (0.35 + t);
+    const droop = -Math.pow(t, 2.1) * 0.20;
+    p.setXYZ(i, sx * halfW, v, cup + droop);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
+/**
+ * Recursive faceted tree: tapered low-poly trunk segments that fork with
+ * jittered angles, tipped with twig subsystems carrying individual 3D leaves.
+ */
+function BuildTree(rand){
+  const hue = state.hue / 360;
+  const barkA = new THREE.Color().setHSL(0.075, 0.30, 0.17);
+  const barkB = new THREE.Color().setHSL(0.065, 0.24, 0.26);
+  const leafA = new THREE.Color().setHSL(hue, 0.66, 0.46);
+  const leafB = new THREE.Color().setHSL((hue + 0.06) % 1, 0.78, 0.62);
+  const edgeTint = new THREE.Color().setHSL((hue + 0.5) % 1, 0.74, 0.70);
+
+  const sides = Math.max(5, Math.min(9, state.sides));
+  const barkMat = new THREE.MeshStandardMaterial({
+    color: barkA, roughness: 0.82, metalness: 0.06, flatShading: true
+  });
+  const barkMat2 = new THREE.MeshStandardMaterial({
+    color: barkB, roughness: 0.74, metalness: 0.08, flatShading: true
+  });
+
+  const maxDepth = RandInt(rand, 4, 5);
+  const up = new THREE.Vector3(0, 1, 0);
+
+  const leafData = [];
+  const leafTex = [leafA, leafB, leafA.clone().lerp(leafB, 0.5)]
+    .map(c => MakeLeafTexture('#' + c.getHexString()));
+  const twigMat = new THREE.MeshStandardMaterial({
+    color: barkB.clone().multiplyScalar(1.25), roughness: 0.9, metalness: 0.04, flatShading: true
+  });
+
+  /** GrowTwigs sprouts thin twigs off a limb tip, each carrying its own phyllotactic leaf chain. */
+  function GrowTwigs(rnd, origin, dir, len, rad, out){
+    const nTwigs = RandInt(rnd, 2, 3);
+    for (let w = 0; w < nTwigs; w++){
+      let side = new THREE.Vector3().crossVectors(dir, up);
+      if (side.lengthSq() < 1e-4) side.set(1, 0, 0);
+      side.normalize();
+      const fwd = new THREE.Vector3().crossVectors(side, dir).normalize();
+      const az = rnd() * Math.PI * 2, outward = 0.5 + rnd() * 0.6;
+      const tDir = dir.clone()
+        .addScaledVector(side, Math.cos(az) * outward)
+        .addScaledVector(fwd, Math.sin(az) * outward);
+      tDir.y += 0.26;
+      tDir.normalize();
+      const tLen = len * (0.5 + rnd() * 0.35);
+      const tOrigin = origin.clone().addScaledVector(dir, -len * rnd() * 0.3);
+
+      const tg = new THREE.CylinderGeometry(rad * 0.12, rad * 0.3, tLen, 5, 1);
+      tg.translate(0, tLen / 2, 0);
+      const tw = new THREE.Mesh(tg, twigMat);
+      tw.position.copy(tOrigin);
+      tw.quaternion.setFromUnitVectors(up, tDir);
+      tw.name = 'twig';
+      root.add(tw);
+      tally.tris += tg.attributes.position.count / 3;
+      tally.parts++;
+
+      const tSide = new THREE.Vector3().crossVectors(tDir, up).normalize();
+      if (tSide.lengthSq() < 1e-4) tSide.set(1, 0, 0);
+      const tFwd = new THREE.Vector3().crossVectors(tSide, tDir).normalize();
+      const nLeaves = RandInt(rnd, 4, 7);
+      for (let l = 0; l < nLeaves; l++){
+        const f = 0.2 + (l / Math.max(1, nLeaves - 1)) * 0.8;
+        const node = tOrigin.clone().addScaledVector(tDir, tLen * f);
+        const phase = l * 2.39996 + rnd() * 0.4;
+        const flare = 0.72 + rnd() * 0.5;
+        const ldir = tDir.clone()
+          .addScaledVector(tSide, Math.cos(phase) * flare)
+          .addScaledVector(tFwd, Math.sin(phase) * flare);
+        ldir.y += 0.16;
+        ldir.normalize();
+        node.addScaledVector(ldir, rad * 0.2);
+        out.push({
+          pos: node, ldir,
+          scale: (0.17 + rnd() * 0.09) * (0.75 + f * 0.4),
+          roll: rnd() * Math.PI * 2,
+          tilt: (rnd() - 0.5) * 0.7,
+          tex: RandInt(rnd, 0, leafTex.length - 1)
+        });
+      }
+    }
+  }
+
+  const Limb = (from, dir, len, rad, depth) => {
+    const to = from.clone().addScaledVector(dir, len);
+    const geo = new THREE.CylinderGeometry(rad * 0.62, rad, len, sides, 1);
+    geo.translate(0, len / 2, 0);
+    const mesh = new THREE.Mesh(geo, depth % 2 ? barkMat2 : barkMat);
+    mesh.position.copy(from);
+    mesh.quaternion.setFromUnitVectors(up, dir.clone().normalize());
+    mesh.name = 'limb';
+    root.add(mesh);
+    tally.tris += geo.attributes.position.count / 3;
+    tally.parts++;
+
+    const e = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo, 18),
+      new THREE.LineBasicMaterial({ color: edgeTint, transparent:true, opacity:0.4 })
+    );
+    e.name = 'edges';
+    e.visible = state.edges;
+    e.position.copy(mesh.position);
+    e.quaternion.copy(mesh.quaternion);
+    root.add(e);
+
+    if (depth >= maxDepth - 1) GrowTwigs(rand, to, dir, len, rad, leafData);
+
+    if (depth >= maxDepth || len < 0.16) return;
+
+    const forks = depth < 2 ? RandInt(rand, 2, 3) : RandInt(rand, 2, 3);
+    const base = rand() * Math.PI * 2;
+    for (let i = 0; i < forks; i++) {
+      const a = base + (i / forks) * Math.PI * 2 + (rand() - 0.5) * 0.7;
+      const spread = 0.42 + rand() * 0.48;
+      const nd = dir.clone()
+        .addScaledVector(new THREE.Vector3(Math.cos(a), 0, Math.sin(a)), spread)
+        .add(new THREE.Vector3(0, 0.22 + rand() * 0.2, 0))
+        .normalize();
+      Limb(to, nd, len * (0.62 + rand() * 0.18), rad * (0.6 + rand() * 0.12), depth + 1);
+    }
+  };
+
+  Limb(new THREE.Vector3(0, -0.04, 0),
+       new THREE.Vector3((rand() - 0.5) * 0.06, 1, (rand() - 0.5) * 0.06).normalize(),
+       0.62 + rand() * 0.2, 0.15 + rand() * 0.04, 0);
+
+  if (leafData.length){
+    const geo = MakeLeafGeometry();
+    const byTex = leafTex.map(() => []);
+    leafData.forEach(L => byTex[L.tex].push(L));
+    const dummy = new THREE.Object3D();
+    byTex.forEach((list, ti) => {
+      if (!list.length) return;
+      const mat = new THREE.MeshStandardMaterial({
+        map: leafTex[ti], transparent: true, alphaTest: 0.45, side: THREE.DoubleSide,
+        roughness: 0.6, metalness: 0.03,
+        emissive: leafA.clone().multiplyScalar(0.35), emissiveIntensity: 0.25
+      });
+      const inst = new THREE.InstancedMesh(geo, mat, list.length);
+      inst.name = 'leaf';
+      list.forEach((L, i) => {
+        dummy.position.copy(L.pos);
+        dummy.scale.setScalar(L.scale);
+        dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), L.ldir);
+        dummy.rotateY(L.roll);
+        dummy.rotateX(L.tilt);
+        dummy.updateMatrix();
+        inst.setMatrixAt(i, dummy.matrix);
+      });
+      inst.instanceMatrix.needsUpdate = true;
+      root.add(inst);
+      tally.tris += (geo.index.count / 3) * list.length;
+      tally.parts += list.length;
+    });
+  }
+
+  const rocks = RandInt(rand, 3, 6);
+  for (let i = 0; i < rocks; i++) {
+    const a = rand() * Math.PI * 2, d = 0.9 + rand() * 1.0;
+    const rg = new THREE.DodecahedronGeometry(0.1 + rand() * 0.14, 0);
+    const rk = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({
+      color: barkA.clone().multiplyScalar(0.8), roughness: 0.92, flatShading: true
+    }));
+    rk.position.set(Math.cos(a) * d, -0.03, Math.sin(a) * d);
+    rk.rotation.set(rand() * 3, rand() * 3, rand() * 3);
+    root.add(rk);
+    tally.tris += rg.attributes.position.count / 3;
+  }
+}
+
+function BuildCrystal(rand){
+  const hue = state.hue / 360;
+
+  const shellTint = new THREE.Color().setHSL(hue, 0.62, 0.58);
+  const coreTint  = new THREE.Color().setHSL((hue + 0.07) % 1, 0.88, 0.52);
+  const edgeTint  = new THREE.Color().setHSL((hue + 0.5) % 1, 0.74, 0.70);
+
+  const Add = (h, r, pos, tilt, spinZ, scale) => {
+    const geo = BuildShard(rand, state.sides, h, r);
+    tally.tris += geo.attributes.position.count / 3;
+    tally.parts++;
+
+    const shell = new THREE.MeshPhysicalMaterial({
+      color: shellTint,
+      metalness: 0,
+      roughness: 0.035 + rand() * 0.05,
+      transmission: 0.97,
+      thickness: h * 0.85,
+      ior: 1.92,
+      attenuationColor: shellTint,
+      attenuationDistance: 1.1,
+      clearcoat: 1,
+      clearcoatRoughness: 0.04,
+      iridescence: 0.85,
+      iridescenceIOR: 1.6,
+      iridescenceThicknessRange: [120, 640],
+      envMapIntensity: 2.1,
+      flatShading: true,
+      side: THREE.DoubleSide
+    });
+
+    const g = new THREE.Group();
+    const mesh = new THREE.Mesh(geo, shell);
+    mesh.name = 'shell';
+    g.add(mesh);
+
+    const core = new THREE.Mesh(geo.clone(), new THREE.MeshStandardMaterial({
+      color: coreTint,
+      emissive: coreTint,
+      emissiveIntensity: 0.45 + rand() * 0.3,
+      roughness: 0.35,
+      metalness: 0.1,
+      flatShading: true
+    }));
+    core.name = 'core';
+    core.scale.setScalar(0.46 + rand() * 0.12);
+    core.position.y = h * 0.16;
+    g.add(core);
+    tally.tris += core.geometry.attributes.position.count / 3;
+
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo, 12),
+      new THREE.LineBasicMaterial({ color: edgeTint, transparent:true, opacity:0.55 })
+    );
+    edges.name = 'edges';
+    edges.visible = state.edges;
+    g.add(edges);
+
+    g.position.copy(pos);
+    g.rotation.z = tilt;
+    g.rotation.y = spinZ;
+    g.scale.setScalar(scale);
+    root.add(g);
+    return g;
+  };
+
+  Add(2.35, 0.62, new THREE.Vector3(0, 0, 0), 0.03, rand() * 6.28, 1);
+
+  const ring = 4 + Math.floor(rand() * 3);
+  for (let i = 0; i < ring; i++) {
+    const a = (i / ring) * Math.PI * 2 + rand() * 0.5;
+    const d = 0.62 + rand() * 0.42;
+    Add(0.85 + rand() * 1.05, 0.20 + rand() * 0.16,
+        new THREE.Vector3(Math.cos(a) * d, -0.04, Math.sin(a) * d),
+        (rand() - 0.5) * 0.62, rand() * 6.28, 1);
+  }
+  for (let i = 0; i < 5; i++) {
+    const a = rand() * Math.PI * 2;
+    const d = 1.15 + rand() * 0.55;
+    Add(0.26 + rand() * 0.34, 0.09 + rand() * 0.07,
+        new THREE.Vector3(Math.cos(a) * d, -0.05, Math.sin(a) * d),
+        (rand() - 0.5) * 1.1, rand() * 6.28, 1);
+  }
+
+}
+
+function SetEdges(){
+  root.traverse(o => { if (o.name === 'edges') o.visible = state.edges; });
+}
+
+function Resize(){
+  const r = canvas.getBoundingClientRect();
+  const w = Math.max(1, r.width | 0), h = Math.max(1, r.height | 0);
+  renderer.setSize(w, h, false);
+  composer.setSize(w, h);
+  bloom.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(Resize).observe(canvas);
+
+const clock = new THREE.Clock();
+function Frame(){
+  requestAnimationFrame(Frame);
+  const dt = clock.getDelta(), t = clock.elapsedTime;
+  if (state.spin) root.rotation.y += dt * 0.22;
+  if (grassMat) {
+    grassMat.uniforms.uTime.value = t;
+    grassMat.uniforms.uWind.value = 0.14 + Math.sin(t * 0.37) * 0.07;
+  }
+  const dust = root.getObjectByName('dust');
+  if (dust) { dust.rotation.y -= dt * 0.06; dust.material.opacity = 0.55 + Math.sin(t * 1.4) * 0.22; }
+  root.traverse(o => {
+    if (o.name === 'core' && o.material) {
+      o.material.emissiveIntensity = 0.48 + Math.sin(t * 1.6 + o.id) * 0.16;
+    }
+  });
+  controls.update();
+  composer.render();
+}
+
+const $ = id => document.getElementById(id);
+
+function SetMode(m){
+  state.mode = m;
+  $('mCrystal').classList.toggle('on', m === 'crystal');
+  $('mTree').classList.toggle('on', m === 'tree');
+  $('title').innerHTML = m === 'tree'
+    ? 'A tree built from <span>nothing but math</span>.'
+    : 'A crystal built from <span>nothing but math</span>.';
+  $('lede').textContent = m === 'tree'
+    ? 'Every branch is grown at runtime: a recursive limb solver forks tapered low poly trunks at jittered angles, then caps each tip with crumpled icosahedral leaf clusters. Drag to orbit, scroll to zoom.'
+    : 'Every facet below is generated at runtime: jittered vertex rings, hard flat normals, a refracting glass shell over a glowing inner core. Drag to orbit, scroll to zoom, regenerate for a brand new stone.';
+  Build();
+}
+
+$('mCrystal').addEventListener('click', () => SetMode('crystal'));
+$('mTree').addEventListener('click', () => SetMode('tree'));
+$('regen').addEventListener('click', () => { state.seed = (Math.random() * 0xffffff) | 0; Build(); });
+
+/** Randomize everything: mode, seed, facet count and hue in one roll. */
+$('rand').addEventListener('click', () => {
+  state.seed = (Math.random() * 0xffffff) | 0;
+  state.sides = 5 + Math.floor(Math.random() * 10);
+  state.hue = Math.floor(Math.random() * 360);
+  $('sides').value = state.sides; $('sidesOut').textContent = state.sides;
+  $('hue').value = state.hue; $('hueOut').textContent = state.hue;
+  SetMode(Math.random() < 0.5 ? 'crystal' : 'tree');
+});
+$('spin').addEventListener('click', e => {
+  state.spin = !state.spin;
+  e.currentTarget.classList.toggle('on', state.spin);
+});
+$('wire').addEventListener('click', e => {
+  state.edges = !state.edges;
+  e.currentTarget.classList.toggle('on', state.edges);
+  SetEdges();
+});
+$('grass').addEventListener('click', e => {
+  state.grass = !state.grass;
+  e.currentTarget.classList.toggle('on', state.grass);
+  grassMat = null;
+  Build();
+});
+$('sides').addEventListener('input', e => {
+  state.sides = +e.target.value;
+  $('sidesOut').textContent = state.sides;
+  Build();
+});
+$('hue').addEventListener('input', e => {
+  state.hue = +e.target.value;
+  $('hueOut').textContent = state.hue;
+  Build();
+});
+
+Resize();
+Build();
+Frame();
+</script>
+</body>
+</html>
